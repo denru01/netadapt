@@ -39,7 +39,7 @@ The code base is tested with the following setting:
 
 First clone the repo in the directory you want to work:
 
-        git clone ...    
+        git clone https://github.com/denru01/netadapt.git  
         cd netadapt
 
 In the following context, we assume you are at the repo root.
