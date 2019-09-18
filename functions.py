@@ -393,7 +393,7 @@ def build_latency_lookup_table(network_def_full, lookup_table_path, min_conv_fea
     
     resource_type = 'LATENCY'
     # Generate the lookup table.
-    lookup_table = {}
+    lookup_table = OrderedDict()
     for layer_name, layer_properties in network_def_full.items():
         
         if verbose:
