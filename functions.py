@@ -723,13 +723,13 @@ def simplify_model_based_on_network_def(simplified_network_def, model):
                 if layer_param_name == WEIGHTSTRING: #WEIGHTSTRING == layer_param_name:                    
                     if layer.groups == 1:  # Pointwise layer or depthwise layer with only one filter.
                         setattr(layer, layer_param_name,
-                                torch.nn.Parameter(getattr(layer, layer_param_name)[:, kept_filter_idx, :, :]))
+                                torch.nn.Parameter(getattr(layer, layer_param_name)[:, kept_filter_idx.long(), :, :]))
                         layer.in_channels = len(kept_filter_idx)
                         print('    simplify_model> simplify Conv layer {}: ipnut channel weights {}'.format(layer_name_str,
                           len(kept_filter_idx)))
                     else: # depthwise
                         setattr(layer, layer_param_name,
-                                torch.nn.Parameter(getattr(layer, layer_param_name)[kept_filter_idx, :, :, :]))
+                                torch.nn.Parameter(getattr(layer, layer_param_name)[kept_filter_idx.long(), :, :, :]))
                         layer.in_channels = len(kept_filter_idx)
                         layer.out_channels = len(kept_filter_idx)
                         layer.groups = len(kept_filter_idx)
@@ -739,7 +739,7 @@ def simplify_model_based_on_network_def(simplified_network_def, model):
                     print('    simplify_model> simplify Conv layer {}: output channel biases {}'.format(layer_name_str, 
                           len(kept_filter_idx)))
                     setattr(layer, layer_param_name,
-                            torch.nn.Parameter(getattr(layer, layer_param_name)[kept_filter_idx]))
+                            torch.nn.Parameter(getattr(layer, layer_param_name)[kept_filter_idx.long()]))
                 else:
                     raise ValueError('The layer_param_name `{}` is not supported.'.format(layer_param_name))
             elif layer_type_str in FC_LAYER_TYPES:
@@ -748,7 +748,7 @@ def simplify_model_based_on_network_def(simplified_network_def, model):
                           len(kept_filter_idx)))
                     # the weights of this layer is already reduced
                     setattr(layer, layer_param_name, 
-                            torch.nn.Parameter(getattr(layer, layer_param_name)[kept_filter_idx]))
+                            torch.nn.Parameter(getattr(layer, layer_param_name)[kept_filter_idx.long()]))
                 else:
                     '''
                         the input features should be modified 
@@ -775,13 +775,13 @@ def simplify_model_based_on_network_def(simplified_network_def, model):
                                                             kept_filter_idx_fc_element + i), dim=0)
                         kept_filter_idx_fc, _ = kept_filter_idx_fc.sort()
                         setattr(layer, layer_param_name, 
-                                torch.nn.Parameter(getattr(layer, layer_param_name)[:, kept_filter_idx_fc]))
+                                torch.nn.Parameter(getattr(layer, layer_param_name)[:, kept_filter_idx_fc.long()]))
                         layer.in_features = len(kept_filter_idx_fc)
                         assert len(kept_filter_idx_fc) == num_in_features
                         
                     else:
                         setattr(layer, layer_param_name,
-                            torch.nn.Parameter(getattr(layer, layer_param_name)[:, kept_filter_idx]))
+                            torch.nn.Parameter(getattr(layer, layer_param_name)[:, kept_filter_idx.long()]))
                         layer.in_features = len(kept_filter_idx)
                         
                     print('    simplify_model> simplify FC layer {}: input channel weights {}'.format(layer_name_str,
@@ -790,13 +790,13 @@ def simplify_model_based_on_network_def(simplified_network_def, model):
             elif layer_type_str in BNORM_LAYER_TYPES:
                 if any(substr == layer_param_name for substr in [WEIGHTSTRING, BIASSTRING]):
                     setattr(layer, layer_param_name,
-                            torch.nn.Parameter(getattr(layer, layer_param_name)[kept_filter_idx], requires_grad=True))
+                            torch.nn.Parameter(getattr(layer, layer_param_name)[kept_filter_idx.long()], requires_grad=True))
                     layer.num_features = len(kept_filter_idx)
                     print('    simplify_model> simplify {} layer {}: {} {}'.format(layer_type_str,
                           layer_name_str, layer_param_name, layer.num_features))
                 elif any(substr == layer_param_name for substr in [RUNNING_MEANSTRING, RUNNING_VARSTRING]):
                     setattr(layer, layer_param_name,
-                            torch.nn.Parameter(getattr(layer, layer_param_name)[kept_filter_idx], requires_grad=False))
+                            torch.nn.Parameter(getattr(layer, layer_param_name)[kept_filter_idx.long()], requires_grad=False))
                     layer.num_features = len(kept_filter_idx)
                     print('    simplify_model> simplify {} layer {}: {} {}'.format(layer_type_str,
                           layer_name_str, layer_param_name, layer.num_features))
@@ -851,14 +851,14 @@ def simplify_model_based_on_network_def(simplified_network_def, model):
                     
                     if layer_type_str in CONV_LAYER_TYPES:
                         setattr(layer, layer_param_name,
-                            torch.nn.Parameter(getattr(layer, layer_param_name)[kept_filter_idx, :, :, :]))
+                            torch.nn.Parameter(getattr(layer, layer_param_name)[kept_filter_idx.long(), :, :, :]))
                         layer.out_channels = len(kept_filter_idx)
                         
                         print('    simplify_model> simplify Conv layer {}: output channel weights {}'.format(layer_name_str,
                               len(kept_filter_idx)))
                     elif layer_type_str in FC_LAYER_TYPES:
                         setattr(layer, layer_param_name, 
-                            torch.nn.Parameter(getattr(layer, layer_param_name)[kept_filter_idx, :]))  
+                            torch.nn.Parameter(getattr(layer, layer_param_name)[kept_filter_idx.long(), :]))  
                         layer.out_features = len(kept_filter_idx)
                         print('    simplify_model> simplify FC layer {}: output channel weights {}'.format(layer_name_str,
                               len(kept_filter_idx)))
